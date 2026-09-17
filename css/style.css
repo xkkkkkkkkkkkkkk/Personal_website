@@ -1,0 +1,743 @@
+/* ============================================================
+   Xike Yang — Personal Academic Homepage  (V1)
+   Design system + components + subtle animations + responsive
+   ============================================================ */
+
+/* ---------- 1. Design tokens ---------- */
+:root {
+  /* Color system: warm off-white + deep navy + slate gray + muted blue */
+  --background: #f6f6f8;
+  --card: #ffffff;
+  --foreground: #1b1f27;
+  --muted: #5c6470;
+  --primary: #17263d;
+  --accent: #2b5b8b;
+  --border: #e5e7ee;
+  --shadow: 0 1px 2px rgba(23, 38, 61, 0.05), 0 8px 24px rgba(23, 38, 61, 0.05);
+
+  /* Typography */
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto,
+    "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+
+  /* Spacing */
+  --section-gap: 6.5rem;
+  --container: 960px;
+  --radius: 12px;
+  --radius-sm: 8px;
+
+  /* Motion */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ---------- 2. Reset ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  line-height: 1.7;
+  color: var(--foreground);
+  background: var(--background);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+h1, h2, h3 {
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--primary);
+  letter-spacing: -0.01em;
+}
+
+/* ---------- 3. Layout container ---------- */
+.site-header,
+main,
+.site-footer {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+section[id] {
+  scroll-margin-top: 5rem; /* offset sticky nav for anchor jump */
+}
+
+.section {
+  padding: var(--section-gap) 0;
+}
+
+/* ---------- 4. Navbar ---------- */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  padding-top: 0;
+  padding-bottom: 0;
+  transition: background 0.3s var(--ease), box-shadow 0.3s var(--ease),
+    border-color 0.3s var(--ease);
+  background: transparent;
+  border-bottom: 1px solid transparent;
+}
+
+.site-header.is-scrolled {
+  background: rgba(246, 246, 248, 0.82);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  border-bottom-color: var(--border);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 4rem;
+}
+
+.brand {
+  font-weight: 600;
+  color: var(--primary);
+  letter-spacing: -0.01em;
+}
+
+.nav-links {
+  display: flex;
+  gap: 2rem;
+  list-style: none;
+}
+
+.nav-links a {
+  font-size: 0.95rem;
+  color: var(--muted);
+  transition: color 0.2s var(--ease);
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+  color: var(--primary);
+}
+
+.nav-toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  width: 1.75rem;
+  height: 1.25rem;
+  position: relative;
+}
+
+.nav-toggle span {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--primary);
+  border-radius: 2px;
+  transition: transform 0.25s var(--ease), opacity 0.25s var(--ease);
+}
+
+.nav-toggle span:nth-child(1) { top: 0; }
+.nav-toggle span:nth-child(2) { bottom: 0; }
+
+/* ---------- 5. Hero ---------- */
+.hero {
+  min-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 4rem 0;
+}
+
+.hero-kicker {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--accent);
+  margin-bottom: 1.25rem;
+  letter-spacing: 0.04em;
+}
+
+.hero h1 {
+  font-size: clamp(2.75rem, 7vw, 4.5rem);
+  font-weight: 700;
+}
+
+.hero-line {
+  max-width: 34rem;
+  margin-top: 1.5rem;
+  font-size: clamp(1.05rem, 2.4vw, 1.3rem);
+  color: var(--muted);
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 2.5rem;
+}
+
+/* ---------- 6. Buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 1.35rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  font-weight: 500;
+  border: 1px solid transparent;
+  transition: transform 0.2s var(--ease), background 0.2s var(--ease),
+    color 0.2s var(--ease), border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: #22334f;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--primary);
+  border-color: var(--border);
+}
+
+.btn-outline:hover {
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--accent);
+}
+
+.btn-ghost:hover {
+  background: rgba(2, 91, 139, 0.06);
+}
+
+/* ---------- 7. Section headers ---------- */
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 2.25rem;
+}
+
+.section-num {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+}
+
+.section-head h2 {
+  font-size: clamp(1.6rem, 3.5vw, 2rem);
+}
+
+.section-body {
+  max-width: 44rem;
+}
+
+.muted-note {
+  color: var(--muted);
+  margin-bottom: 1.75rem;
+}
+
+.lede {
+  font-size: 1.15rem;
+  color: var(--primary);
+  max-width: 40rem;
+}
+
+/* ---------- 8. Facts / About ---------- */
+.facts {
+  margin-top: 2rem;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem 2rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1.75rem;
+}
+
+.facts dt {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 0.25rem;
+}
+
+.facts dd {
+  font-size: 1rem;
+  color: var(--foreground);
+}
+
+/* ---------- 9. Cards (Research) ---------- */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease),
+    border-color 0.25s var(--ease);
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow);
+  border-color: #d5d9e4;
+}
+
+.card h3 {
+  font-size: 1.15rem;
+  margin-bottom: 0.5rem;
+}
+
+.card p {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+/* ---------- 10. Projects ---------- */
+.project-card {
+  max-width: 34rem;
+}
+
+.project-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.badge {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+}
+
+.project-tags {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 0.75rem;
+}
+
+.project-desc {
+  color: var(--muted);
+}
+
+/* ---------- 11. Learning chips ---------- */
+.chips {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.chips li {
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  color: var(--foreground);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  transition: border-color 0.2s var(--ease), transform 0.2s var(--ease);
+}
+
+.chips li:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+/* ---------- 12. Timeline ---------- */
+.timeline {
+  list-style: none;
+  border-left: 1px solid var(--border);
+  margin-left: 0.5rem;
+  padding-left: 1.75rem;
+}
+
+.timeline li {
+  position: relative;
+  padding-bottom: 1.5rem;
+}
+
+.timeline li:last-child {
+  padding-bottom: 0;
+}
+
+.timeline li::before {
+  content: "";
+  position: absolute;
+  left: -2.05rem;
+  top: 0.4rem;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: var(--card);
+  border: 2px solid var(--accent);
+}
+
+.timeline .year {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--accent);
+}
+
+.timeline p {
+  color: var(--foreground);
+  margin-top: 0.25rem;
+}
+
+/* ---------- 13. Contact ---------- */
+.contact-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.75rem;
+  margin-top: 1.5rem;
+}
+
+.contact-list a {
+  font-weight: 500;
+  color: var(--primary);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.15rem;
+  transition: color 0.2s var(--ease), border-color 0.2s var(--ease);
+}
+
+.contact-list a:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ---------- 14. Footer ---------- */
+.site-footer {
+  border-top: 1px solid var(--border);
+  padding: 2.5rem 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* ---------- 15. Reveal animation (section connections) ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s var(--ease), transform 0.7s var(--ease);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* ---------- 16. Responsive ---------- */
+@media (max-width: 1024px) {
+  .section-body { max-width: 100%; }
+}
+
+@media (max-width: 768px) {
+  :root { --section-gap: 4.5rem; }
+
+  /* Hero */
+  .hero { min-height: 68vh; }
+  .hero-actions { gap: 0.5rem; }
+  .btn { padding: 0.6rem 1.1rem; }
+
+  /* nav -> mobile menu */
+  .nav-toggle { display: block; }
+
+  .nav-links {
+    position: absolute;
+    top: 4rem;
+    left: 1.5rem;
+    right: 1.5rem;
+    flex-direction: column;
+    gap: 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 0.5rem;
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
+    transition: opacity 0.25s var(--ease), transform 0.25s var(--ease);
+  }
+
+  .nav-open .nav-links {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+
+  .nav-links a {
+    display: block;
+    padding: 0.7rem 1rem;
+    border-radius: var(--radius-sm);
+  }
+
+  .nav-links a:hover { background: var(--background); }
+
+  /* grids collapse */
+  .facts,
+  .cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 430px) {
+  .section-head { flex-direction: column; gap: 0.25rem; margin-bottom: 1.5rem; }
+  .contact-list { gap: 1.25rem; }
+}
+
+/* ---------- 18. Hobbies & Gallery ---------- */
+.block-label {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin: 2rem 0 0.85rem;
+}
+
+.chips { margin-top: 0; }
+
+.gallery {
+  margin-top: 0.25rem;
+  max-width: 40rem;
+}
+
+.gallery-frame {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: transparent; /* gaps are transparent, not a filler colour */
+}
+
+.gallery-track {
+  display: flex;
+  transition: transform 0.5s var(--ease);
+}
+
+/* Pause animation on hover is handled in JS; this adds a fallback for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .gallery-track { transition: none; }
+}
+
+/* ---------- Collage page: one slide = several photo "rows" that fill the
+   full width. Every photo keeps its own aspect ratio (never cropped or
+   stretched), so a row is as tall as the photos it contains. --- */
+.gal-page {
+  flex: 0 0 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* centre rows -> leftover space is transparent */
+  gap: 0; /* flush between rows */
+  background: transparent;
+}
+
+.gal-row {
+  display: flex;
+  width: 100%;
+  gap: 0; /* flush between photos */
+}
+
+/* Each cell is sized by its photo's aspect ratio (set from JS on width),
+   so the photo always keeps its true proportions. */
+.gal-cell {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.gal-cell img {
+  display: block;
+  width: 100%;
+  height: auto; /* no cropping, no distortion */
+  object-fit: initial;
+  cursor: zoom-in;
+}
+
+.gallery-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--primary);
+  font-size: 1.5rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  transition: background 0.2s var(--ease), opacity 0.2s var(--ease);
+  opacity: 0;
+}
+
+.gallery-frame:hover .gallery-nav,
+.gallery-nav:focus-visible {
+  opacity: 1;
+}
+
+.gallery-nav.prev { left: 0.75rem; }
+.gallery-nav.next { right: 0.75rem; }
+
+.gallery-nav:hover { background: #fff; }
+
+.gallery-dots {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: center;
+  margin-top: 0.75rem;
+}
+
+.gallery-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  border: none;
+  background: var(--border);
+  cursor: pointer;
+  transition: background 0.2s var(--ease);
+}
+
+.gallery-dot.active { background: var(--accent); }
+
+@media (max-width: 430px) {
+  .gallery { max-width: 100%; }
+}
+
+/* ---------- Lightbox: open a single photo full-screen ---------- */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(8, 10, 14, 0.92);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s var(--ease), visibility 0.25s var(--ease);
+}
+
+.lightbox.open { opacity: 1; visibility: visible; }
+
+.lightbox img {
+  max-width: 92vw;
+  max-height: 92vh;
+  border-radius: var(--radius);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+  background: var(--bg);
+  /* Pop-in on open, zoom back down on close */
+  transform: scale(0.82);
+  opacity: 0;
+  transition: transform 0.28s var(--ease), opacity 0.22s var(--ease);
+}
+
+.lightbox.open img {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.lightbox-close,
+.lightbox-prev,
+.lightbox-next {
+  position: absolute;
+  z-index: 2;
+  border: none;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: background 0.2s var(--ease);
+}
+
+.lightbox-close {
+  top: 1rem;
+  right: 1rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 1.4rem;
+}
+
+.lightbox-prev,
+.lightbox-next {
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2.75rem;
+  height: 2.75rem;
+  font-size: 1.6rem;
+}
+
+.lightbox-prev { left: 1rem; }
+.lightbox-next { right: 1rem; }
+
+.lightbox-close:hover,
+.lightbox-prev:hover,
+.lightbox-next:hover {
+  background: #fff;
+}
+
+@media (max-width: 430px) {
+  .lightbox-prev { left: 0.5rem; }
+  .lightbox-next { right: 0.5rem; }
+}

@@ -1,0 +1,133 @@
+/* ============================================================
+   Xike Yang — Personal Academic Homepage  (V2)
+   Docked top-left scroll cube.
+
+   The cube is hidden during the opening hero, then fades in as you scroll
+   into "01 About" and stays docked to the top-left of the content column
+   (see css/deck.css). Each section rotates it to the matching face.
+   CSS 3D transforms only — no libraries.
+
+   Inspired by "Six Faces / Walking The Cow" — see README Credits.
+   ============================================================ */
+
+/* ---------- 1. Tokens ---------- */
+:root {
+  /* Shared V2 geometry. Everything is viewport-relative, so the cube (and the
+     corner it lives in) scales with page zoom / window resizing. */
+  --page-pad: clamp(1.1rem, 3.2vw, 2.75rem);   /* side gutter */
+  --corner-top: clamp(4.9rem, 9.5vh, 6.6rem);  /* clears the fixed nav */
+  /* A modest slice of the viewport's short edge — small enough to leave the
+     whole panel readable, big enough to stay a real 3D object. */
+  --cube-size: clamp(70px, 10.8vmin, 134px);   /* ≈ 80% of the previous size */
+  --cube-half: calc(var(--cube-size) / 2);
+  --cube-gap: clamp(0.9rem, 1.6vw, 1.5rem);    /* space between cube & text */
+  --cube-perspective: 1150px;                  /* flatter projection = less swell mid-rotation */
+  --cube-face-bg: linear-gradient(160deg, #ffffff 0%, #f2f4f9 100%);
+  --cube-face-border: #dfe3ec;
+}
+
+/* ---------- 2. Stage: docked to the top-left of the content column ----------
+   js/animation.js drives opacity (0 during the hero → 1 from About on) and a
+   small scale-up, so the cube "arrives" as you scroll out of the hero. */
+.cube-stage {
+  position: absolute;
+  top: var(--corner-top);
+  left: var(--deck-inset);
+  transform-origin: top left;
+  width: var(--cube-size);
+  height: var(--cube-size);
+  perspective: var(--cube-perspective);
+  perspective-origin: 50% 50%;
+  pointer-events: none;             /* purely decorative */
+  z-index: 5;                        /* always above the panels */
+  opacity: 0;                        /* revealed by JS */
+  will-change: opacity, transform;
+}
+
+/* ---------- 3. Cube ---------- */
+.cube {
+  position: relative;
+  width: var(--cube-size);
+  height: var(--cube-size);
+  transform-style: preserve-3d;
+  transform: rotateX(0deg) rotateY(0deg); /* JS drives this */
+  will-change: transform;
+}
+
+/* ---------- 4. Faces ---------- */
+.cube-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  background: var(--cube-face-bg);
+  border: 1px solid var(--cube-face-border);
+  border-radius: 10px;
+  color: var(--primary);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  box-shadow: 0 10px 30px rgba(23, 38, 61, 0.1),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+  overflow: hidden;
+}
+
+/* thin accent bar at the top of every face */
+.cube-face::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--accent);
+  opacity: 0.55;
+}
+
+/* Each face carries only a large, faint chapter index — the section title
+   itself lives in the panel heading, so nothing is repeated. */
+.cube-index {
+  font-family: var(--font-mono);
+  font-size: calc(var(--cube-size) * 0.3);  /* scales with the cube */
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  opacity: 0.7;
+}
+
+/* Faces placed on the 6 sides of the cube. Half-edge = size / 2. */
+.face-front  { transform: translateZ(var(--cube-half)); }
+.face-back   { transform: rotateY(180deg) translateZ(var(--cube-half)); }
+.face-right  { transform: rotateY(90deg)  translateZ(var(--cube-half)); }
+.face-left   { transform: rotateY(-90deg) translateZ(var(--cube-half)); }
+.face-top    { transform: rotateX(90deg)  translateZ(var(--cube-half)); }
+.face-bottom { transform: rotateX(-90deg) translateZ(var(--cube-half)); }
+
+/* ---------- 5. Short viewports: shrink the cube so panels still fit ---------- */
+@media (max-height: 720px) {
+  :root {
+    --corner-top: clamp(4.4rem, 8vh, 5.6rem);
+    --cube-size: clamp(62px, 9.6vmin, 112px);
+    --cube-gap: clamp(0.75rem, 1.2vw, 1.1rem);
+  }
+}
+
+@media (max-height: 560px) {
+  :root {
+    --corner-top: 4.2rem;
+    --cube-size: clamp(54px, 8.4vmin, 94px);
+    --cube-gap: 0.7rem;
+  }
+}
+
+/* ---------- 6. Reduced motion: calm, static front face ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .cube {
+    transform: none !important;
+    transition: none;
+    will-change: auto;
+  }
+}
