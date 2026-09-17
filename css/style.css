@@ -741,3 +741,143 @@ section[id] {
   .lightbox-prev { left: 0.5rem; }
   .lightbox-next { right: 0.5rem; }
 }
+
+/* ---------- 19. Feedback form (V3) ---------- */
+.feedback-form {
+  display: grid;
+  gap: 0.8rem;
+  max-width: 40rem;
+}
+
+.feedback-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.feedback-field {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.feedback-caption {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.feedback-caption em {
+  font-style: normal;
+  text-transform: none;
+  letter-spacing: 0;
+  color: #98a0ae;
+}
+
+.feedback-field input,
+.feedback-field textarea {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  font: inherit;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--foreground);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+}
+
+.feedback-field textarea {
+  resize: vertical;
+  min-height: 4.25rem;
+}
+
+.feedback-field input::placeholder,
+.feedback-field textarea::placeholder {
+  color: #9aa2b0;
+}
+
+.feedback-field input:focus,
+.feedback-field textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(43, 91, 139, 0.12);
+}
+
+/* Off-screen rather than display:none - some bots skip hidden fields. */
+.feedback-hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.feedback-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  /* Deliberately no wrapping. On a narrow phone a long status line used to
+     drop onto its own row, growing the form by ~39px and shoving the submit
+     button off the bottom of the panel. Letting the status shrink and wrap
+     its own text instead keeps the row exactly one button tall, so the panel
+     does not jump the moment a message is sent. */
+  flex-wrap: nowrap;
+}
+
+.feedback-actions .btn { flex: 0 0 auto; }
+
+.feedback-actions .btn[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.feedback-actions .btn[disabled]:hover {
+  transform: none;
+  box-shadow: none;
+  background: var(--primary);
+}
+
+.feedback-status {
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;                /* let the text wrap instead of overflowing */
+  font-size: 0.85rem;
+  /* Tight enough that two wrapped lines still fit inside the button's height,
+     so the actions row never grows when a status message appears. */
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.feedback-status.is-ok { color: #1f7a4d; }
+.feedback-status.is-err { color: #b23b3b; }
+
+/* Short viewports (e.g. iPhone SE at 667px tall): tighten the form so the
+   Contact panel still lands on one screen. */
+@media (max-height: 720px) {
+  .feedback-form { gap: 0.6rem; }
+  .feedback-row { gap: 0.6rem; }
+  .feedback-field textarea { height: 3.4rem; }
+}
+
+@media (max-width: 560px) {
+  .feedback-row { grid-template-columns: 1fr; }
+}
+
+/* ---------- 20. Feedback confetti (V3) ---------- */
+/* A throwaway full-screen layer, created by js/confetti.js only while the
+   celebration is running and removed again once the last piece lands.
+   The box below is what the canvas is measured and drawn against, so JS must
+   keep using the canvas's own size - not window.innerWidth, which includes
+   the scrollbar and would stretch the picture. */
+.confetti-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;               /* above everything, incl. the lightbox (1000) */
+  width: 100%;
+  height: 100%;
+  pointer-events: none;        /* never swallows a click */
+}

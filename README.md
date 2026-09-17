@@ -1,7 +1,12 @@
 # Xike Yang — Personal Website
 
 A small, dependency-free personal academic homepage (HTML + CSS + vanilla JS).
-No frameworks, no build step, no backend.
+No frameworks, no build step, no dependencies to install.
+
+Since V3 the Contact panel has a feedback form. There is no server of our own: the
+browser posts straight to a hosted Supabase table over its REST API with plain
+`fetch`, and the site itself is published on GitHub Pages. See
+[the feedback form](#the-feedback-form-v3) and [`docs/V3.md`](docs/V3.md).
 
 ## Structure
 
@@ -14,12 +19,17 @@ personal-website/
 │   └── deck.css      # sticky pin + cross-fading panels (V2)
 ├── js/
 │   ├── main.js       # mobile menu, gallery, lightbox
-│   └── animation.js  # scroll progress -> cube rotation + panel cross-fade (V2)
+│   ├── animation.js  # scroll progress -> cube rotation + panel cross-fade (V2)
+│   ├── feedback.js   # Contact feedback form -> Supabase REST (V3)
+│   └── confetti.js   # celebration burst when a message is saved (V3)
 ├── assets/
 │   ├── favicon.svg   # isometric cube icon (matches the V2 cube)
 │   └── gallery/      # 21 processed photos (photo-01.jpg … photo-21.jpg)
 ├── docs/
-│   └── V1.md         # V1 iteration log
+│   ├── V1.md         # V1 iteration log
+│   ├── V3.md         # V3 iteration log + GitHub Pages / Supabase setup
+│   └── supabase-feedback.sql   # feedback table + RLS policy
+├── .nojekyll         # ship files as-is on GitHub Pages (V3)
 └── README.md
 ```
 
@@ -134,6 +144,60 @@ with the viewport.
   instant (non-animated) panel switching via `@media (prefers-reduced-motion: reduce)`.
 - Without JavaScript, `css/deck.css` unpins the deck into a normal document flow so all
   content stays readable.
+
+## The feedback form (V3)
+
+The Contact panel ends with a small form (Name / Email optional, Message required).
+There is no backend of our own — `js/feedback.js` POSTs the values as JSON straight to a
+hosted **Supabase** table using `fetch`, so there is no SDK to install and no build step.
+
+```
+browser  --POST /rest/v1/feedback-->  Supabase (Postgres)
+```
+
+### Setup
+
+1. Create a project at [supabase.com](https://supabase.com).
+2. Run `docs/supabase-feedback.sql` in its SQL editor (creates the table + RLS policy).
+3. Project Settings → API, then paste the **Project URL** and the **`anon` public** key
+   into `SUPABASE_URL` / `SUPABASE_ANON_KEY` at the top of `js/feedback.js`.
+
+Both values are meant to be public. The table grants `INSERT` only to the `anon` role and
+has no `SELECT` policy, so the public key cannot read anyone's feedback. **Never put the
+`service_role` key in the front end.** To read submissions, use the Supabase Table Editor
+or:
+
+```sql
+select created_at, name, email, message from public.feedback order by created_at desc;
+```
+
+### Behaviour
+
+- **Not configured yet** — the form does not break: it opens the visitor's mail client
+  with the message pre-addressed to the fallback email in `js/feedback.js`.
+- **Validation** — message required, message ≤ `MAX_MESSAGE` (2000) characters, and email
+  must look like an email if one was given. All checked client-side before any request.
+- **Spam** — a visually hidden `#fb-website` honeypot input: if a bot fills it in, the form
+  shows success but sends nothing.
+- **Celebration** — a genuinely saved message fires a short confetti burst
+  (`js/confetti.js`) from the submit button. It is drawn on a throwaway `<canvas>` that
+  removes itself once the last piece lands, and it is skipped entirely for visitors who set
+  the OS "reduce motion" preference. It is only ever a bonus: if the file is missing, the
+  success message still appears.
+- **Failure** — a non-2xx response or a network error shows a "could not send" message
+  (with the fallback address) and re-enables the button.
+- `docs/supabase-feedback.sql` also adds a `created_at desc` index for reading the table.
+
+### Publish on GitHub Pages
+
+The site is plain static files, so Pages can serve the repo root directly:
+
+1. Repo **Settings → Pages**.
+2. Source: *Deploy from a branch*; branch `main`, folder `/ (root)`.
+3. The URL appears as `https://<user>.github.io/<repo>/`.
+
+The `.nojekyll` file in the root stops GitHub from running Jekyll over the files.
+Full step-by-step notes (in Chinese) are in [`docs/V3.md`](docs/V3.md).
 
 ## Credits / Inspiration
 

@@ -217,6 +217,36 @@
             <a href="https://github.com/xkkkkkkkkkkkkkk" target="_blank" rel="noopener">https://github.com/xkkkkkkkkkkkkkk</a>
             <a href="mailto:xk_yyy@outlook.com">xk_yyy@outlook.com</a>
           </div>
+
+          <h3 class="block-label block-feedback">Feedback</h3>
+          <form class="feedback-form" id="feedback-form" novalidate>
+            <div class="feedback-row">
+              <label class="feedback-field">
+                <span class="feedback-caption">Name <em>optional</em></span>
+                <input type="text" id="fb-name" name="name" autocomplete="name"
+                       maxlength="80" placeholder="Your name">
+              </label>
+              <label class="feedback-field">
+                <span class="feedback-caption">Email <em>optional</em></span>
+                <input type="email" id="fb-email" name="email" autocomplete="email"
+                       maxlength="120" placeholder="you@example.com">
+              </label>
+            </div>
+            <label class="feedback-field">
+              <span class="feedback-caption">Message</span>
+              <textarea id="fb-message" name="message" rows="3" maxlength="2000" required
+                        placeholder="Say hi, or tell me what could be better..."></textarea>
+            </label>
+            <!-- Honeypot: positioned off-screen for humans, irresistible to bots. -->
+            <div class="feedback-hp" aria-hidden="true">
+              <label for="fb-website">Website</label>
+              <input type="text" id="fb-website" name="website" tabindex="-1" autocomplete="off">
+            </div>
+            <div class="feedback-actions">
+              <button type="submit" class="btn btn-primary" id="fb-submit">Send feedback</button>
+              <p class="feedback-status" id="fb-status" role="status" aria-live="polite"></p>
+            </div>
+          </form>
         </div>
       </section>
 
@@ -230,5 +260,8 @@
   <script src="js/main.js" defer></script>
   <!-- V2: top-left docked scroll cube + panel deck -->
   <script src="js/animation.js" defer></script>
+  <!-- V3: Contact feedback form -> Supabase -->
+  <script src="js/confetti.js" defer></script>
+  <script src="js/feedback.js" defer></script>
 </body>
 </html>
