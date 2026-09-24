@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Feedback form diagnostics</title>
+<style>
+  :root { color-scheme: light; }
+  body {
+    margin: 0; padding: 20px 16px 60px;
+    font: 15px/1.6 -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: #f6f6f8; color: #1b1f27;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  p.sub { color: #5c6470; margin: 0 0 20px; font-size: 13px; }
+  .case {
+    background: #fff; border: 1px solid #e5e7ee; border-radius: 12px;
+    padding: 14px 16px; margin-bottom: 14px;
+  }
+  .case h2 { font-size: 14px; margin: 0 0 2px; }
+  .case .why { color: #5c6470; font-size: 12px; margin: 0 0 10px; }
+  .verdict { font-weight: 700; font-size: 15px; margin: 0 0 6px; }
+  .ok   { color: #1c7c4a; }
+  .bad  { color: #b3261e; }
+  .wait { color: #8a6d1f; }
+  pre {
+    margin: 0; padding: 10px; background: #f2f3f7; border-radius: 8px;
+    font: 12px/1.5 ui-monospace, Menlo, Consolas, monospace;
+    white-space: pre-wrap; word-break: break-word; overflow-x: auto;
+  }
+  #env { font-size: 12px; color: #5c6470; }
+  #env pre { background: #fff; border: 1px solid #e5e7ee; }
+  .done { background: #17263d; color: #fff; border: none; border-radius: 8px;
+          padding: 12px 18px; font-size: 15px; width: 100%; margin-top: 8px; }
+</style>
+</head>
+<body>
+  <h1>反馈表单诊断</h1>
+  <p class="sub">在手机上打开这一页，它会依次执行四项测试并显示结果。把整页截图发给我即可。</p>
+
+  <div id="cases"></div>
+
+  <div id="env" class="case">
+    <h2>运行环境</h2>
+    <pre id="envout">…</pre>
+  </div>
+
+  <button class="done" id="copy">复制全部结果</button>
+
+<script>
+"use strict";
+
+/* Same values the live site uses (public by design - INSERT-only anon key). */
+var BASE = "https://gvwcfewtubdsqlqxlzbl.supabase.co";
+var KEY  = "sb_publishable_XXhe11c3qKuIaKSqKq3vgw_MB4ETxDG";
+var TABLE = "/rest/v1/feedback";
+
+var CASES = [
+  {
+    id: "t1",
+    title: "1. 能不能连上 supabase.co（不带自定义请求头）",
+    why: "最基础的连通性。这是“简单请求”，浏览器不会发预检。",
+    run: function () {
+      return fetch(BASE + TABLE, { method: "GET" })
+        .then(function (r) {
+          return r.text().then(function (t) {
+            return { ok: true, detail: "HTTP " + r.status + "\n" + t.slice(0, 300) };
+          });
+        });
+    }
+  },
+  {
+    id: "t2",
+    title: "2. 用 URL 参数传 key（仍然不带自定义请求头）",
+    why: "验证 key 本身被接受，同时避开预检。",
+    run: function () {
+      return fetch(BASE + TABLE + "?apikey=" + encodeURIComponent(KEY), { method: "GET" })
+        .then(function (r) {
+          return r.text().then(function (t) {
+            return { ok: true, detail: "HTTP " + r.status + "\n" + t.slice(0, 300) };
+          });
+        });
+    }
+  },
+  {
+    id: "t3",
+    title: "3. 网站真正用的写法：POST + apikey 请求头",
+    why: "自定义请求头会触发 CORS 预检（OPTIONS）。这一项失败 = 预检被拦。",
+    run: function () {
+      var body = JSON.stringify({
+        name: "phone diagnostic",
+        email: "",
+        message: "phone diagnostic " + Date.now()
+      });
+      return fetch(BASE + TABLE, {
+        method: "POST",
+        headers: {
+          "apikey": KEY,
+          "Authorization": "Bearer " + KEY,
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        body: body
+      }).then(function (r) {
+        return r.text().then(function (t) {
+          return { ok: r.ok, detail: "HTTP " + r.status + "\n" + (t || "(empty body)").slice(0, 300) };
+        });
+      });
+    }
+  },
+  {
+    id: "t4",
+    title: "4. 只带 Authorization，不带 apikey",
+    why: "区分是“某个请求头被拦”还是“所有自定义请求头都被拦”。",
+    run: function () {
+      return fetch(BASE + TABLE, {
+        method: "GET",
+        headers: { "Authorization": "Bearer " + KEY }
+      }).then(function (r) {
+        return r.text().then(function (t) {
+          return { ok: true, detail: "HTTP " + r.status + "\n" + t.slice(0, 300) };
+        });
+      });
+    }
+  }
+];
+
+var out = [];
+var box = document.getElementById("cases");
+
+function esc(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+var rows = CASES.map(function (c) {
+  return { title: c.title, why: c.why, state: "wait", pass: false, detail: "" };
+});
+
+function paint() {
+  var html = rows.map(function (r) {
+    var cls = r.state === "wait" ? "wait" : (r.pass ? "ok" : "bad");
+    var mark = r.state === "wait" ? "测试中…" : (r.pass ? "成功" : "失败");
+    return '<div class="case"><h2>' + esc(r.title) + '</h2>' +
+      '<p class="why">' + esc(r.why) + '</p>' +
+      '<p class="verdict ' + cls + '">' + mark + '</p>' +
+      '<pre>' + esc(r.detail || "(等待)") + '</pre></div>';
+  }).join("");
+  box.innerHTML = html;
+}
+
+paint();
+
+function describeError(err) {
+  if (!err) return "unknown error";
+  return (err.name || "Error") + ": " + (err.message || String(err));
+}
+
+(function runAll(i) {
+  if (i >= CASES.length) {
+    document.getElementById("envout").textContent = [
+      "userAgent: " + navigator.userAgent,
+      "origin   : " + location.origin + location.pathname,
+      "secureContext: " + window.isSecureContext,
+      "onLine   : " + navigator.onLine,
+      "language : " + navigator.language
+    ].join("\n");
+    out = rows.map(function (r) {
+      return r.title + "\n  => " + (r.state === "wait" ? "pending" : (r.pass ? "PASS" : "FAIL")) + "\n" + r.detail;
+    }).join("\n\n");
+    return;
+  }
+
+  var c = CASES[i];
+  var t0 = Date.now();
+  var settled = false;
+
+  /* A hung request is itself a finding: some networks drop the connection
+     instead of refusing it, and fetch would otherwise sit there forever. */
+  var timer = setTimeout(function () {
+    if (settled) return;
+    settled = true;
+    rows[i].state = "done";
+    rows[i].pass = false;
+    rows[i].detail = "超时：30 秒内没有任何响应。\n" +
+      "（连接被网络静默丢弃，常见于链路受限）";
+    paint();
+    runAll(i + 1);
+  }, 30000);
+
+  try {
+    c.run().then(function (res) {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      rows[i].state = "done";
+      /* Any HTTP answer at all means the network path works; only a thrown
+         TypeError means the request never completed. */
+      rows[i].pass = true;
+      rows[i].detail = res.detail + "\n(" + (Date.now() - t0) + " ms)";
+      paint();
+      runAll(i + 1);
+    }).catch(function (err) {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      rows[i].state = "done";
+      rows[i].pass = false;
+      rows[i].detail = describeError(err) + "\n(" + (Date.now() - t0) + " ms)";
+      paint();
+      runAll(i + 1);
+    });
+  } catch (err) {
+    if (settled) return;
+    settled = true;
+    clearTimeout(timer);
+    rows[i].state = "done";
+    rows[i].pass = false;
+    rows[i].detail = "同步抛错：" + describeError(err);
+    paint();
+    runAll(i + 1);
+  }
+})(0);
+
+document.getElementById("copy").addEventListener("click", function () {
+  var text = out + "\n\n=== ENV ===\n" + document.getElementById("envout").textContent;
+  var btn = this;
+  function done() { btn.textContent = "已复制 ✓"; setTimeout(function () { btn.textContent = "复制全部结果"; }, 1500); }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done, function () { done(); });
+  } else {
+    done();
+  }
+});
+</script>
+</body>
+</html>
