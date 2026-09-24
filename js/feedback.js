@@ -27,6 +27,8 @@
   var TABLE = "feedback";
   var FALLBACK_EMAIL = "xk_yyy@outlook.com";
   var MAX_MESSAGE = 2000;
+  var ATTEMPTS = 3;        /* total tries, not retries */
+  var RETRY_DELAY = 900;   /* ms before try 2; scaled by the attempt number */
 
   var form = document.getElementById("feedback-form");
   if (!form) return;
@@ -54,14 +56,61 @@
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
   }
 
-  function openMailFallback(payload) {
+  function mailtoHref(payload) {
     var subject = "Website feedback" + (payload.name ? " from " + payload.name : "");
     var body = payload.message +
       "\n\n---\nName: " + (payload.name || "-") +
       "\nEmail: " + (payload.email || "-");
-    window.location.href = "mailto:" + FALLBACK_EMAIL +
+    return "mailto:" + FALLBACK_EMAIL +
       "?subject=" + encodeURIComponent(subject) +
       "&body=" + encodeURIComponent(body);
+  }
+
+  function openMailFallback(payload) {
+    window.location.href = mailtoHref(payload);
+  }
+
+  /* A failed send must never cost the visitor what they just typed. Rather
+     than only telling them to email, hand them a real link carrying the whole
+     message. A tap is a user gesture, so it works even where a scripted
+     navigation would be ignored - iOS and in-app browsers especially. */
+  function setStatusWithMailto(message, payload) {
+    statusEl.textContent = "";
+    statusEl.className = "feedback-status is-err";
+    statusEl.appendChild(document.createTextNode(message + " "));
+    var link = document.createElement("a");
+    link.href = mailtoHref(payload);
+    link.textContent = "Email it instead";
+    statusEl.appendChild(link);
+    statusEl.appendChild(document.createTextNode("."));
+  }
+
+  function postOnce(payload) {
+    return fetch(endpoint(), {
+      method: "POST",
+      headers: {
+        "apikey": SUPABASE_ANON_KEY.trim(),
+        "Authorization": "Bearer " + SUPABASE_ANON_KEY.trim(),
+        "Content-Type": "application/json",
+        "Prefer": "return=minimal"
+      },
+      body: JSON.stringify(payload)
+    }).then(function (res) {
+      if (res.ok) return true;
+      return res.text().then(function (detail) {
+        var err = new Error("HTTP " + res.status + " " + detail.slice(0, 200));
+        err.status = res.status;
+        throw err;
+      });
+    });
+  }
+
+  /* No status at all means fetch itself rejected: offline, DNS failure, a
+     dropped connection, CORS. Those deserve another try. 5xx and 429 are the
+     server asking us back later. A 4xx is a real answer, so don't repeat it. */
+  function worthRetrying(err) {
+    if (!err || !err.status) return true;
+    return err.status >= 500 || err.status === 429;
   }
 
   /* Clear a previous error as soon as the visitor starts fixing the input. */
@@ -75,6 +124,18 @@
   function celebrate() {
     if (typeof window.confettiBurst === "function") {
       window.confettiBurst(submitBtn);
+    }
+  }
+
+  /* Confetti is decoration, never a report on whether the message was saved.
+     It runs inside the success branch, so anything it throws would bubble
+     into the catch below and rewrite a successful save as a failure message.
+     The animation must not be able to veto the save. */
+  function safeCelebrate() {
+    try {
+      celebrate();
+    } catch (err) {
+      if (window.console && console.warn) console.warn("[feedback] confetti failed", err);
     }
   }
 
@@ -119,33 +180,36 @@
     submitBtn.disabled = true;
     setStatus("Sending...");
 
-    fetch(endpoint(), {
-      method: "POST",
-      headers: {
-        "apikey": SUPABASE_ANON_KEY.trim(),
-        "Authorization": "Bearer " + SUPABASE_ANON_KEY.trim(),
-        "Content-Type": "application/json",
-        "Prefer": "return=minimal"
-      },
-      body: JSON.stringify(payload)
-    })
-      .then(function (res) {
-        if (res.ok) {
+    var attempt = 0;
+
+    function finish() {
+      submitBtn.disabled = false;
+    }
+
+    function send() {
+      attempt++;
+      postOnce(payload)
+        .then(function () {
           form.reset();
           setStatus("Thanks - your feedback was saved.", "ok");
-          celebrate();
-          return;
-        }
-        return res.text().then(function (detail) {
-          throw new Error("HTTP " + res.status + " " + detail.slice(0, 200));
+          safeCelebrate();
+          finish();
+        })
+        .catch(function (err) {
+          /* A slow, flaky link is the norm on mobile data, so a couple of
+             quiet retries is the difference between "works" and "broken".
+             A rejected request (4xx) is not retried - that answer won't
+             change, and repeating it just wastes the visitor's time. */
+          if (attempt < ATTEMPTS && worthRetrying(err)) {
+            window.setTimeout(send, RETRY_DELAY * attempt);
+            return;
+          }
+          setStatusWithMailto("Could not send right now.", payload);
+          if (window.console && console.warn) console.warn("[feedback]", err);
+          finish();
         });
-      })
-      .catch(function (err) {
-        setStatus("Could not send right now. Please email " + FALLBACK_EMAIL + ".", "err");
-        if (window.console && console.warn) console.warn("[feedback]", err);
-      })
-      .then(function () {
-        submitBtn.disabled = false;
-      });
+    }
+
+    send();
   });
 })();

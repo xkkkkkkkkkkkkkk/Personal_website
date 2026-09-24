@@ -185,9 +185,16 @@ select created_at, name, email, message from public.feedback order by created_at
   (`js/confetti.js`) from the submit button. It is drawn on a throwaway `<canvas>` that
   removes itself once the last piece lands, and it is skipped entirely for visitors who set
   the OS "reduce motion" preference. It is only ever a bonus: if the file is missing, the
-  success message still appears.
-- **Failure** — a non-2xx response or a network error shows a "could not send" message
-  (with the fallback address) and re-enables the button.
+  success message still appears, and it runs inside a `try`/`catch` so that an exception
+  thrown by the animation cannot turn an already-saved message back into an error.
+- **Failure** — a network error is retried (`ATTEMPTS` = 3) with a short backoff, because a
+  flaky mobile connection is the norm rather than the exception. A 4xx is deliberately *not*
+  retried: that answer will not change, so repeating it only wastes the visitor's time. If
+  every try fails, the form shows a "could not send" message together with an **Email it
+  instead** link carrying the visitor's text in a pre-filled `mailto:` — so a failure never
+  costs them what they just typed — and re-enables the button.
+- **Slow links** — a merely slow request is left to finish. There is no client-side timeout
+  that could abandon a message the server may already have stored.
 - `docs/supabase-feedback.sql` also adds a `created_at desc` index for reading the table.
 
 ### Publish on GitHub Pages
