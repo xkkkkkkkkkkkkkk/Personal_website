@@ -10,6 +10,12 @@ browser posts straight to a hosted Supabase table over its REST API with plain
 `fetch`, and the site itself is published on GitHub Pages. See
 [the feedback form](#the-feedback-form-v3) and [`docs/V3.md`](docs/V3.md).
 
+V4 fixes the gallery on phones (one full-width photo per page instead of a filmstrip, with
+720/1200 renditions behind `srcset` so a phone stops pulling 1600px originals), replaces the
+flat mat around a portrait photo with a blurred copy of that same photo, adds the bottom-right
+AI twin, and stops the gallery from auto-advancing for visitors who ask for reduced motion.
+See [the photography block](#photography-block-about-panel) and [`docs/V4.md`](docs/V4.md).
+
 ## Structure
 
 ```
@@ -18,19 +24,24 @@ personal-website/
 ├── css/
 │   ├── style.css     # design system + components + responsive (V1)
 │   ├── cube.css      # top-left docked 3D cube (V2)
-│   └── deck.css      # sticky pin + cross-fading panels (V2)
+│   ├── deck.css      # sticky pin + cross-fading panels (V2)
+│   └── ai-twin.css   # bottom-right chat widget (V4)
 ├── js/
-│   ├── main.js       # mobile menu, gallery, lightbox
+│   ├── main.js       # mobile menu, gallery (carousel + collage), lightbox
 │   ├── animation.js  # scroll progress -> cube rotation + panel cross-fade (V2)
 │   ├── feedback.js   # Contact feedback form -> Supabase REST (V3)
-│   └── confetti.js   # celebration burst when a message is saved (V3)
+│   ├── confetti.js   # celebration burst when a message is saved (V3)
+│   └── ai-twin.js    # bottom-right chat widget, local knowledge base (V4)
 ├── assets/
 │   ├── favicon.svg   # isometric cube icon (matches the V2 cube)
-│   └── gallery/      # 21 processed photos (photo-01.jpg … photo-21.jpg)
+│   └── gallery/      # 21 photos, each as photo-NN.jpg + 720/1200 renditions (V4)
 ├── docs/
 │   ├── V1.md         # V1 iteration log
 │   ├── V3.md         # V3 iteration log + GitHub Pages / Supabase setup
+│   ├── V4.md         # V4 iteration log (gallery, blurred backdrops, AI twin)
 │   └── supabase-feedback.sql   # feedback table + RLS policy
+├── tools/
+│   └── make-image-variants.ps1 # regenerate the 720/1200 renditions (V4)
 ├── .nojekyll         # ship files as-is on GitHub Pages (V3)
 └── README.md
 ```
@@ -117,18 +128,33 @@ var STOPS = [
 
 ### Photography block (About panel)
 
-The 21 photos in `assets/gallery/` are arranged by the `COLLAGE` / `FILMSTRIP` arrays in
-`js/main.js` (each page is a list of rows, each row a list of photo numbers). The layout
-follows the viewport:
+The 21 photos in `assets/gallery/` are arranged by the `CAROUSEL` / `COLLAGE` /
+`COLLAGE_TALL` arrays in `js/main.js` (a collage page is a list of rows, each row a list of
+photo numbers). The layout follows the viewport:
 
 - **≥ 1024px** — `COLLAGE`: two rows per page, so the photos read as a large square-ish
-  grid (4 pages). The About panel splits into text (left) and photography (right).
-- **< 1024px** — `FILMSTRIP`: one row per page (5 pages). The collage would be too tall on
-  a phone and would push About past one screen, so the filmstrip keeps the panel fitting.
+  grid (4 pages); `COLLAGE_TALL` (three rows) takes over once the window is at least 850px
+  high. The About panel splits into text (left) and photography (right).
+- **< 1024px** — `CAROUSEL` (V4): **one full-width photo per page, 21 pages**. The old
+  filmstrip left each photo 42–111px wide on a phone; the smallest long edge is 225px now.
 
 `matchMedia` swaps the two live, without a reload. Rows always fill the full width and each
 photo keeps its own aspect ratio (never cropped or stretched); the frame is sized to the
-tallest page, and any leftover space is filled with the accent colour.
+tallest page.
+
+**Blurred backdrops (V4).** A 3:2 frame cannot be filled by a portrait photo, and the flat
+accent-coloured mat that used to sit in that gap read as a blue border around every photo.
+The carousel now lays a blurred, slightly scaled copy of *that same photo* behind it
+(`.gal-slide-glow`, `blur(22px) saturate(1.2)`), reusing the 720px file the slide already
+downloads — so it costs no extra request. Measured on a portrait photo, the sharp centre band
+carries 6.89 of per-column high-frequency detail against 0.96 in the bands beside it, and
+hiding the backdrop turns those bands into the flat track colour (`#14171d`). Photos that
+already fill the frame (16:9, or the near-3:2 ones) show no bands at all.
+
+**Renditions (V4).** Each photo ships as `photo-NN.jpg` (1600px), `photo-NN-720.jpg` and
+`photo-NN-1200.jpg`. `js/main.js` picks between them with `srcset` and
+`sizes = "(max-width: 1023px) 92vw, 28vw"`, so a phone downloads 993KB of 720px files
+instead of 4.27MB of originals. `tools/make-image-variants.ps1` regenerates both tiers.
 
 ### Hero portrait slot
 
@@ -207,6 +233,38 @@ The site is plain static files, so Pages can serve the repo root directly:
 
 The `.nojekyll` file in the root stops GitHub from running Jekyll over the files.
 Full step-by-step notes (in Chinese) are in [`docs/V3.md`](docs/V3.md).
+
+## The AI twin (V4)
+
+A launcher in the bottom-right corner opens a small chat panel (`js/ai-twin.js`,
+`css/ai-twin.css`).
+
+- **It answers only from the page.** A local knowledge base (`KB`) holds 10 entries taken from
+  the real About / Research / Experience / Projects / Learning / Contact copy, plus five
+  quick-question chips. When nothing matches, it says so and offers the relevant section link
+  instead of inventing an answer.
+- **It is not connected to a model yet, and says so**: the header carries a
+  `Template mode · not connected yet` note until it is.
+- **`askAI(text)` is the single seam** a real API will plug into. It resolves to
+  `{ text, links?: [{ label, href }] }`; today it replays the local answer after 280ms.
+- **Safe by construction** — every reply is written with `textContent` (returning HTML would
+  just show up as tags), and every outbound link carries `target="_blank" rel="noopener"`.
+- It is a **non-modal** dialog (`aria-modal="false"`), so the rest of the page stays usable;
+  `Esc` closes it, except while the lightbox is open.
+
+## Auto-play and reduced motion (V4)
+
+The gallery advances one page every 2s. Visitors who set the OS "reduce motion" preference now
+get **no auto-advance at all**: the check sits in `start()`, the single entry point that the
+first load, the dots, the arrows, the hover/focus resume, the 3s resume after a touch and the
+lightbox close all pass through. The dots, arrows, swipe and lightbox still work by hand —
+they just move instantly instead of gliding, which is what the preference asks for. Toggling
+the preference while the page is open is honoured through a `change` listener. (Before V4 the
+preference only made the scroll instant; the slideshow still advanced every 2s.)
+
+Auto-play also pauses while a finger is on the strip, resumes 3s after the last touch, and
+never flips onto a photo that has not decoded yet (`whenReady`), so a slow connection cannot
+strand the visitor on an empty frame.
 
 ## Credits / Inspiration
 
