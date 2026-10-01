@@ -26,6 +26,8 @@
   <!-- V2: top-left docked scroll cube + panel deck -->
   <link rel="stylesheet" href="css/cube.css" />
   <link rel="stylesheet" href="css/deck.css" />
+  <!-- V4: bottom-right AI twin chat -->
+  <link rel="stylesheet" href="css/ai-twin.css" />
 </head>
 <body>
   <header class="site-header" id="top">
@@ -257,11 +259,59 @@
     <p>© 2026 Xike Yang</p>
   </footer>
 
+  <!-- V4 — AI twin: a launcher in the bottom-right corner and the chat panel
+       it opens. The answers live in js/ai-twin.js. The live model is not
+       wired up yet: it replies from a fixed set of facts taken from this
+       page, and says so when it doesn't know. -->
+  <div class="ai-twin" id="ai-twin">
+    <button class="ai-twin-launcher" id="ai-twin-launcher" type="button"
+            aria-expanded="false" aria-controls="ai-twin-panel"
+            aria-label="Ask my AI twin" title="Ask my AI twin">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5H8.4L4 22.5l.9-4.4A8.5 8.5 0 1 1 21 11.5Z" />
+      </svg>
+    </button>
+
+    <section class="ai-twin-panel" id="ai-twin-panel" role="dialog" aria-modal="false"
+             aria-label="Xike's AI twin">
+      <header class="ai-twin-head">
+        <span class="ai-twin-avatar" aria-hidden="true">XY</span>
+        <span class="ai-twin-title">
+          <strong>Xike's AI twin</strong>
+          <small>Template mode &middot; not connected yet</small>
+        </span>
+        <button class="ai-twin-close" id="ai-twin-close" type="button"
+                aria-label="Close chat">&times;</button>
+      </header>
+
+      <!-- Answers are announced as they are added. -->
+      <div class="ai-twin-log" id="ai-twin-log" role="log" aria-live="polite"
+           aria-relevant="additions"></div>
+
+      <!-- Filled by js/ai-twin.js from the same table the answers come from. -->
+      <div class="ai-twin-quick" id="ai-twin-quick" role="group"
+           aria-label="Suggested questions"></div>
+
+      <form class="ai-twin-form" id="ai-twin-form">
+        <input type="text" id="ai-twin-input" name="question" autocomplete="off"
+               maxlength="200" aria-label="Your question"
+               placeholder="Ask about Xike&hellip;" />
+        <button class="ai-twin-send" type="submit" aria-label="Send">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M5 12h13M12 5l7 7-7 7" />
+          </svg>
+        </button>
+      </form>
+    </section>
+  </div>
+
   <script src="js/main.js" defer></script>
   <!-- V2: top-left docked scroll cube + panel deck -->
   <script src="js/animation.js" defer></script>
   <!-- V3: Contact feedback form -> Supabase -->
   <script src="js/confetti.js" defer></script>
   <script src="js/feedback.js" defer></script>
+  <!-- V4: bottom-right AI twin chat -->
+  <script src="js/ai-twin.js" defer></script>
 </body>
 </html>
