@@ -317,6 +317,11 @@
 
   function start() {
     stop();
+    // A reader who asked the system for reduced motion does not want a
+    // slideshow that keeps moving on its own. Every way in goes through here,
+    // so one check covers the first load, the dots, the arrows and each resume;
+    // the dots, arrows and swipe still work by hand.
+    if (REDUCED.matches) return;
     timer = setInterval(nextPage, INTERVAL);
   }
 
@@ -489,6 +494,11 @@
   else if (WIDE.addListener) WIDE.addListener(onBreakpoint);
   if (TALL.addEventListener) TALL.addEventListener("change", onBreakpoint);
   else if (TALL.addListener) TALL.addListener(onBreakpoint);
+
+  // Honour a reduced-motion preference changed while the page is open.
+  function onReduced() { if (REDUCED.matches) stop(); else start(); }
+  if (REDUCED.addEventListener) REDUCED.addEventListener("change", onReduced);
+  else if (REDUCED.addListener) REDUCED.addListener(onReduced);
 
   buildPages(pickMode());
 
