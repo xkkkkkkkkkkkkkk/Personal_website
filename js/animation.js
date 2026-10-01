@@ -93,6 +93,7 @@
 
   var deckTop = 0;
   var pinLen = 1;
+  var measuredWidth = 0;
   var target = 0;
   var current = 0;
   var running = false;
@@ -126,6 +127,7 @@
       1,
       deck.offsetHeight - (pin ? pin.offsetHeight : window.innerHeight)
     );
+    measuredWidth = window.innerWidth;
   }
 
   function progressFromScroll() {
@@ -271,8 +273,14 @@
   }
 
   window.addEventListener("scroll", update, { passive: true });
+  /* Re-measure only when the width really changed. A phone's URL bar sliding
+     away fires a resize with the same width; re-measuring there recomputed
+     pinLen and quietly re-mapped the current scroll position onto a different
+     panel, so the deck looked like it had jumped a section on its own. */
   window.addEventListener("resize", function () {
-    measure(); update(); syncAllOverflow();
+    if (window.innerWidth !== measuredWidth) measure();
+    update();
+    syncAllOverflow();
   }, { passive: true });
   window.addEventListener("load", function () {
     measure(); update(); syncAllOverflow();

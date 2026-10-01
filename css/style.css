@@ -605,6 +605,73 @@ section[id] {
   cursor: zoom-in;
 }
 
+/* ---------- Phone carousel: one photo per slide, swipeable ----------
+   Below 1024px the collage shrank every photo to a 42-111px-wide sliver, so a
+   a narrow screen gets a single full-width photo per slide instead. The strip
+   scrolls natively, so swiping needs no JS at all, and the frame keeps a 3:2
+   slide with object-fit: contain — photos are still never cropped or
+   stretched, and whatever is left over is filled with that same photo, blown
+   up and blurred, so the frame melts into the picture instead of showing a
+   flat border around it. --- */
+.gallery-track.is-carousel {
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  transform: none; /* JS scrolls this track; it does not translate it */
+  transition: none;
+  background: #14171d; /* only shows before a slide's own backdrop loads */
+}
+
+.gallery-track.is-carousel::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+.gal-slide {
+  position: relative; /* anchors the blurred backdrop */
+  overflow: hidden;   /* keeps the scaled backdrop inside this slide */
+  flex: 0 0 100%;
+  width: 100%;
+  aspect-ratio: 3 / 2; /* one height for every slide, so nothing jumps */
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* The photo as its own backdrop: the letterbox around a portrait shot becomes
+   a continuation of the picture rather than a coloured frame. The scale hides
+   the soft edge a blur leaves, and the saturation stops it going muddy. */
+.gal-slide-glow {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(22px) saturate(1.2);
+  transform: scale(1.2);
+  pointer-events: none;
+}
+
+.gal-slide img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* whole photo, never cropped or stretched */
+  position: relative;  /* paints above the blurred backdrop */
+  cursor: zoom-in;
+}
+
+/* The arrows would sit on top of a full-width photo. The strip is swipeable and
+   has dots, so on touch-sized screens the photo gets the room instead. */
+@media (max-width: 1023px) {
+  .gallery-frame.is-carousel .gallery-nav { display: none; }
+}
+
 .gallery-nav {
   position: absolute;
   top: 50%;

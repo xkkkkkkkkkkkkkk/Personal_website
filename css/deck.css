@@ -38,8 +38,13 @@ html.js .site-header {
   max-width: none;
   margin: 0;
   padding: 0;
-  /* one panel ≈ 120vh of scroll (the extra 20vh is a small "hold") */
+  /* One panel ≈ 120vh of scroll (the extra 20vh is a small "hold").
+     svh, not vh: vh resolves against the *large* mobile viewport while
+     .deck-pin below uses svh (the small one), so the deck and its own pin
+     disagreed by the height of a mobile URL bar — and every panel's scroll
+     position moved whenever that bar hid or came back. */
   height: calc(var(--panel-count, 7) * 120vh);
+  height: calc(var(--panel-count, 7) * 120svh);
 }
 
 .deck-pin {
@@ -92,6 +97,15 @@ html.js .site-header {
   -ms-overflow-style: none;
 }
 .panel-body::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
+/* On a phone the panel body is a scroller of its own. With chaining left on,
+   one flick that reached the end of the text carried straight on into the
+   PAGE — and the page is a deck where ~705px is a whole section, so a single
+   flick could coast three or four panels past the one you were reading. Stop
+   the chain on touch/narrow screens; desktop keeps chaining on purpose. */
+@media (max-width: 1023px), (hover: none) {
+  .panel-body { overscroll-behavior-y: contain; }
+}
 
 /* Fade the bottom edge only while there is more content to scroll to
    (js/animation.js toggles .has-overflow / .at-bottom). */
@@ -202,6 +216,25 @@ html.js .site-header {
   }
   #about .panel-body > .about-photos .block-label { margin: 0.15rem 0 0.35rem; }
   #about .panel-body > .about-photos .gallery { max-width: none; margin-top: 0; }
+}
+
+/* ---------- Phones: photography moves up under the intro ----------
+   On a phone the whole About panel is one scrolling column, and the gallery
+   used to sit at the very bottom of it — below the fold, inside a scroll area
+   that hides its own scrollbar — so the photos were effectively invisible.
+   Lifting the block right under the lede is what actually fixes that; the
+   collage is replaced by a single-photo carousel for the same reason (see the
+   carousel section in style.css). Order: intro, photos, facts, hobbies. --- */
+@media (max-width: 1023px) {
+  #about .panel-body {
+    display: flex;
+    flex-direction: column;
+  }
+  #about .panel-body > .lede { order: 1; }
+  #about .panel-body > .about-photos { order: 2; }
+  #about .panel-body > .facts { order: 3; }
+  #about .panel-body > .block-hobbies { order: 4; }
+  #about .panel-body > .chips { order: 5; }
 }
 
 /* ---------- Narrow screens: tighter so the About panel still fits ---------- */
