@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="version" content="4.1" />
   <title>Xike Yang — Computer Science Undergraduate</title>
   <meta name="description" content="Xike Yang, Computer Science undergraduate." />
   <meta property="og:title" content="Xike Yang — Computer Science Undergraduate" />
@@ -28,8 +29,113 @@
   <link rel="stylesheet" href="css/deck.css" />
   <!-- V4: bottom-right AI twin chat -->
   <link rel="stylesheet" href="css/ai-twin.css" />
+  <link rel="stylesheet" href="css/math-background.css" />
 </head>
 <body>
+  <!-- Decorative diagrams only: outside the reading order and click targets. -->
+  <div class="math-background" aria-hidden="true" inert>
+    <!-- Illustrative token fragments, not vocabulary IDs from a real tokenizer. -->
+    <div class="math-token-stream">
+      <span class="math-token" style="--token-y:12%;--token-duration:72s;--token-delay:-4s;--token-drift:18px"><small>t₀₁</small> ▁data</span>
+      <span class="math-token" style="--token-y:22%;--token-duration:89s;--token-delay:-16s;--token-drift:-24px;--token-direction:reverse"><small>t₀₂</small> ##ing</span>
+      <span class="math-token" style="--token-y:31%;--token-duration:81s;--token-delay:-28s;--token-drift:22px"><small>t₀₃</small> ▁model</span>
+      <span class="math-token" style="--token-y:40%;--token-duration:96s;--token-delay:-53s;--token-drift:-18px;--token-direction:reverse"><small>t₀₄</small> [CLS]</span>
+      <span class="math-token" style="--token-y:49%;--token-duration:76s;--token-delay:-55s;--token-drift:20px"><small>t₀₅</small> ▁carbon</span>
+      <span class="math-token" style="--token-y:58%;--token-duration:104s;--token-delay:-94s;--token-drift:-22px;--token-direction:reverse"><small>t₀₆</small> ĠAI</span>
+      <span class="math-token" style="--token-y:67%;--token-duration:85s;--token-delay:-11s;--token-drift:24px"><small>t₀₇</small> ▁learn</span>
+      <span class="math-token" style="--token-y:76%;--token-duration:93s;--token-delay:-39s;--token-drift:-16px;--token-direction:reverse"><small>t₀₈</small> ##tion</span>
+      <span class="math-token" style="--token-y:84%;--token-duration:78s;--token-delay:-52s;--token-drift:18px"><small>t₀₉</small> ▁vision</span>
+      <span class="math-token" style="--token-y:91%;--token-duration:99s;--token-delay:-82s;--token-drift:-20px;--token-direction:reverse"><small>t₁₀</small> [SEP]</span>
+    </div>
+    <svg class="math-connections" focusable="false" preserveAspectRatio="none">
+      <!-- Conceptual links between sketches, not a model architecture. -->
+      <path data-from="gradient" data-to="backprop" />
+      <path data-from="backprop" data-to="network" />
+      <path data-from="network" data-to="cnn" />
+      <path data-from="cnn" data-to="transformer" />
+      <path data-from="transformer" data-to="backprop" />
+      <path data-from="transformer" data-to="gradient" />
+      <path data-from="gradient" data-to="network" />
+    </svg>
+    <svg class="math-scene math-gradient" viewBox="0 0 280 190" focusable="false">
+      <g class="math-lines">
+        <path class="math-axis" d="M28 24V151H260" />
+        <path d="M46 39Q151 225 256 39" />
+        <path class="math-guide" d="M68 74L111 118L138 130L151 132" />
+        <circle cx="68" cy="74" r="3" /><circle cx="111" cy="118" r="3" />
+        <circle cx="138" cy="130" r="3" /><circle cx="151" cy="132" r="3" />
+      </g>
+      <circle class="math-dot math-descent" cx="0" cy="0" r="4" />
+      <text x="28" y="178">θₜ₊₁ = θₜ − η∇L(θₜ)</text>
+    </svg>
+
+    <svg class="math-scene math-network" viewBox="0 0 260 190" focusable="false">
+      <g class="math-lines math-edges">
+        <path d="M30 48L112 30M30 48L112 72M30 48L112 114M30 48L112 156
+                 M30 96L112 30M30 96L112 72M30 96L112 114M30 96L112 156
+                 M30 144L112 30M30 144L112 72M30 144L112 114M30 144L112 156
+                 M112 30L194 57M112 30L194 129M112 72L194 57M112 72L194 129
+                 M112 114L194 57M112 114L194 129M112 156L194 57M112 156L194 129
+                 M194 57L242 93M194 129L242 93" />
+      </g>
+      <g class="math-lines math-nodes">
+        <circle cx="30" cy="48" r="7" /><circle cx="30" cy="96" r="7" /><circle cx="30" cy="144" r="7" />
+        <circle cx="112" cy="30" r="7" /><circle cx="112" cy="72" r="7" />
+        <circle cx="112" cy="114" r="7" /><circle cx="112" cy="156" r="7" />
+        <circle cx="194" cy="57" r="7" /><circle cx="194" cy="129" r="7" /><circle cx="242" cy="93" r="7" />
+      </g>
+      <circle class="math-dot math-forward" cx="0" cy="0" r="3" />
+      <text x="32" y="184">h = σ(Wx + b)</text>
+    </svg>
+
+    <svg class="math-scene math-backprop" viewBox="0 0 280 170" focusable="false">
+      <g class="math-lines">
+        <rect x="28" y="47" width="46" height="39" rx="7" />
+        <rect x="114" y="47" width="46" height="39" rx="7" />
+        <rect x="200" y="47" width="46" height="39" rx="7" />
+        <path d="M74 66H114M160 66H200" />
+        <path class="math-guide" d="M222 96V114H51V96M51 96L47 102M51 96L55 102" />
+      </g>
+      <text x="44" y="72">x</text><text x="130" y="72">h</text><text x="218" y="72">L</text>
+      <circle class="math-dot math-backward" cx="0" cy="0" r="3" />
+      <text x="28" y="151">∂L/∂w = (∂L/∂h)(∂h/∂w)</text>
+    </svg>
+
+    <svg class="math-scene math-cnn" viewBox="0 0 280 180" focusable="false">
+      <g class="math-lines">
+        <rect x="24" y="37" width="84" height="84" rx="3" />
+        <path class="math-edges" d="M38 37V121M52 37V121M66 37V121M80 37V121M94 37V121
+                 M24 51H108M24 65H108M24 79H108M24 93H108M24 107H108" />
+        <path class="math-guide" d="M118 79H168M162 75L168 79L162 83" />
+        <rect x="180" y="51" width="56" height="56" rx="3" />
+        <path class="math-edges" d="M194 51V107M208 51V107M222 51V107
+                 M180 65H236M180 79H236M180 93H236" />
+      </g>
+      <rect class="math-kernel" x="24" y="37" width="42" height="42" rx="2" />
+      <text x="25" y="24">Input</text><text x="177" y="38">Feature map</text>
+      <text x="24" y="153">yᵢⱼ = ΣₘΣₙ kₘₙ xᵢ₊ₘ,ⱼ₊ₙ</text>
+    </svg>
+
+    <svg class="math-scene math-transformer" viewBox="0 0 280 210" focusable="false">
+      <g class="math-lines">
+        <rect x="32" y="21" width="42" height="28" rx="5" />
+        <rect x="117" y="21" width="42" height="28" rx="5" />
+        <rect x="202" y="21" width="42" height="28" rx="5" />
+        <path class="math-guide" d="M53 49L53 77M53 49L138 77M53 49L223 77
+                 M138 49L53 77M138 49V77M138 49L223 77
+                 M223 49L53 77M223 49L138 77M223 49V77" />
+        <rect x="32" y="77" width="212" height="36" rx="6" />
+        <path d="M138 113V132M138 166V178" />
+        <rect x="32" y="132" width="212" height="34" rx="6" />
+      </g>
+      <text x="47" y="40">Q</text><text x="132" y="40">K</text><text x="217" y="40">V</text>
+      <text x="138" y="100" text-anchor="middle">Attention</text>
+      <text x="138" y="154" text-anchor="middle">Feed-forward</text>
+      <circle class="math-dot math-attention" cx="0" cy="0" r="3" />
+      <text x="22" y="202">Attention = softmax(QKᵀ/√dₖ)V</text>
+    </svg>
+  </div>
+
   <header class="site-header" id="top">
     <nav class="nav" aria-label="Primary">
       <a class="brand" href="#top">Xike Yang</a>
@@ -100,8 +206,8 @@
           </p>
           <dl class="facts">
             <div><dt>Position</dt><dd>Computer Science Undergraduate</dd></div>
-            <div><dt>Focus</dt><dd>……</dd></div>
-            <div><dt>Learning</dt><dd>……</dd></div>
+            <div><dt>Focus</dt><dd>ML &amp; AI4S</dd></div>
+            <div><dt>Learning</dt><dd>Python, Linux, and data structures and algorithms, alongside self-study with D2L and CS336.</dd></div>
             <div><dt>Affiliation</dt><dd>TJU &amp; POLYU</dd></div>
           </dl>
 
@@ -141,20 +247,12 @@
           </p>
           <div class="cards">
             <article class="card">
-              <h3>……</h3>
-              <p>……</p>
+              <h3>Machine Learning</h3>
+              <p>I'm interested in how models learn from data and how their performance is evaluated. I'm currently building the mathematical and programming foundations needed to explore this field.</p>
             </article>
             <article class="card">
-              <h3>……</h3>
-              <p>……</p>
-            </article>
-            <article class="card">
-              <h3>……</h3>
-              <p>……</p>
-            </article>
-            <article class="card">
-              <h3>……</h3>
-              <p>……</p>
+              <h3>Computer Systems</h3>
+              <p>I'm curious about how software interacts with the systems it runs on, from operating systems to computer architecture. I want to understand what makes programs reliable and efficient.</p>
             </article>
           </div>
         </div>
@@ -182,7 +280,13 @@
           <h2>Projects</h2>
         </header>
         <div class="panel-body">
-          <p class="muted-note">Coming soon.</p>
+          <article class="card project-card">
+            <div class="project-top">
+              <h3>CarbonLens</h3>
+              <span class="badge">Early stage</span>
+            </div>
+            <p class="muted-note">Exploring how AI can help analyze sustainability-related data and support a better understanding of sustainability challenges.</p>
+          </article>
         </div>
       </section>
 
@@ -194,7 +298,9 @@
         </header>
         <div class="panel-body">
           <p class="muted-note">
-            What I'm working on right now — a look at where I'm growing.
+            I'm studying deep learning with Dive into Deep Learning (D2L) and
+            exploring language models through self-study of CS336, alongside
+            my computer science fundamentals.
           </p>
           <ul class="chips">
             <li>Python</li>
@@ -202,7 +308,8 @@
             <li>Data Structures &amp; Algorithms</li>
             <li>Machine Learning</li>
             <li>Computer Systems</li>
-            <li>……</li>
+            <li><a href="https://d2l.ai/" target="_blank" rel="noopener">D2L · Dive into Deep Learning</a></li>
+            <li><a href="https://cs336.stanford.edu/" target="_blank" rel="noopener">CS336 · Self-study</a></li>
           </ul>
         </div>
       </section>
@@ -256,13 +363,10 @@
   </main>
 
   <footer class="site-footer">
-    <p>© 2026 Xike Yang</p>
+    <p>© 2026 Xike Yang · V4.1</p>
   </footer>
 
-  <!-- V4 — AI twin: a launcher in the bottom-right corner and the chat panel
-       it opens. The answers live in js/ai-twin.js. The live model is not
-       wired up yet: it replies from a fixed set of facts taken from this
-       page, and says so when it doesn't know. -->
+  <!-- AI twin: local answers or the configured server-side DeepSeek proxy. -->
   <div class="ai-twin" id="ai-twin">
     <button class="ai-twin-launcher" id="ai-twin-launcher" type="button"
             aria-expanded="false" aria-controls="ai-twin-panel"
@@ -278,7 +382,7 @@
         <span class="ai-twin-avatar" aria-hidden="true">XY</span>
         <span class="ai-twin-title">
           <strong>Xike's AI twin</strong>
-          <small>Template mode &middot; not connected yet</small>
+          <small id="ai-twin-status">Local mode &middot; API not configured</small>
         </span>
         <button class="ai-twin-close" id="ai-twin-close" type="button"
                 aria-label="Close chat">&times;</button>
@@ -294,7 +398,7 @@
 
       <form class="ai-twin-form" id="ai-twin-form">
         <input type="text" id="ai-twin-input" name="question" autocomplete="off"
-               maxlength="200" aria-label="Your question"
+               maxlength="2000" aria-label="Your question"
                placeholder="Ask about Xike&hellip;" />
         <button class="ai-twin-send" type="submit" aria-label="Send">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -312,6 +416,8 @@
   <script src="js/confetti.js" defer></script>
   <script src="js/feedback.js" defer></script>
   <!-- V4: bottom-right AI twin chat -->
+  <script src="js/ai-twin-config.js" defer></script>
   <script src="js/ai-twin.js" defer></script>
+  <script src="js/math-background.js" defer></script>
 </body>
 </html>

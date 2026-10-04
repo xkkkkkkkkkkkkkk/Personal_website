@@ -5,6 +5,10 @@ https://xkkkkkkkkkkkkkk.github.io/Personal_website/
 A small, dependency-free personal academic homepage (HTML + CSS + vanilla JS).
 No frameworks, no build step, no dependencies to install.
 
+Current release: **V4.1** (2026-10-05). It updates the personal content, adds
+subtle math and token backgrounds with simpler mobile animations, and connects
+the AI twin to DeepSeek through a Supabase Edge Function. See [`docs/V4.1.md`](docs/V4.1.md).
+
 Since V3 the Contact panel has a feedback form. There is no server of our own: the
 browser posts straight to a hosted Supabase table over its REST API with plain
 `fetch`, and the site itself is published on GitHub Pages. See
@@ -239,14 +243,22 @@ Full step-by-step notes (in Chinese) are in [`docs/V3.md`](docs/V3.md).
 A launcher in the bottom-right corner opens a small chat panel (`js/ai-twin.js`,
 `css/ai-twin.css`).
 
-- **It answers only from the page.** A local knowledge base (`KB`) holds 10 entries taken from
-  the real About / Research / Experience / Projects / Learning / Contact copy, plus five
-  quick-question chips. When nothing matches, it says so and offers the relevant section link
-  instead of inventing an answer.
-- **It is not connected to a model yet, and says so**: the header carries a
-  `Template mode · not connected yet` note until it is.
-- **`askAI(text)` is the single seam** a real API will plug into. It resolves to
-  `{ text, links?: [{ label, href }] }`; today it replays the local answer after 280ms.
+- **DeepSeek integration is prepared locally.** `js/ai-twin-config.js` selects a
+  Supabase Edge Function proxy. The proxy passed a live reply and CORS preflight
+  check on 2026-10-05; the endpoint setting is enabled in V4.1.
+  Setting the endpoint to empty restores the
+  existing local knowledge base.
+- **Live mode supports general questions and multiple turns.** The server supplies
+  confirmed personal facts; the model is instructed not to invent personal achievements.
+  Replies can still be wrong. No live web search is provided.
+- **Secrets stay on the server.** Persistent request quotas cap public usage;
+  requests fail closed if quota storage is unavailable. Conversations stay in page
+  memory; messages and relevant history are sent to DeepSeek when live mode is used.
+- **Failure is explicit.** Duplicate sends are blocked while waiting, requests have
+  timeouts, and failed questions are restored for retry. The status becomes connected
+  only after a successful reply.
+- Deployment and limits: [`docs/ai-twin-deepseek.md`](docs/ai-twin-deepseek.md).
+  Run mocked client/server tests with `node --test tests/ai-twin.test.mjs`.
 - **Safe by construction** — every reply is written with `textContent` (returning HTML would
   just show up as tags), and every outbound link carries `target="_blank" rel="noopener"`.
 - It is a **non-modal** dialog (`aria-modal="false"`), so the rest of the page stays usable;
@@ -265,6 +277,38 @@ preference only made the scroll instant; the slideshow still advanced every 2s.)
 Auto-play also pauses while a finger is on the strip, resumes 3s after the last touch, and
 never flips onto a photo that has not decoded yet (`whenReady`), so a slow connection cannot
 strand the visitor on an empty frame.
+
+## Background math sketches
+
+`css/math-background.css` styles five decorative SVG diagrams in `index.html`:
+gradient descent, a neural network forward pass, the backpropagation chain rule,
+CNN convolution, and a simplified Transformer attention / feed-forward path.
+Pale gray and blue sketches slowly orbit as the deck scrolls, with curved
+conceptual connections following their centers. These connections are decoration,
+not a diagram of a specific model architecture. A background-colored fade
+protects the central reading column. Local signals move on 24–32 second cycles;
+the CNN window scans a six-by-six input to illustrate convolution.
+
+On narrow screens and touch devices, gradient descent and CNN remain as two static sketches.
+Only the token stream keeps moving: diagram signals, convolution scanning, and
+connections are disabled. The background's scroll listener and frame loop are
+not active on phones. Reduced-motion preferences freeze
+the scroll layout and local animations. Printing hides the background, and
+`js/math-background.js` pauses animation while the page is hidden and schedules
+frames only while scroll movement is settling. Mobile URL-bar height changes
+do not re-map the trajectories.
+The layer is `aria-hidden`, `inert`, and ignores pointer events.
+
+A separate token stream drifts continuously behind the sketches. The fragments
+are illustrative, not output from a particular tokenizer. Ten tokens on desktop
+(five on smaller screens) follow staggered 72–104 second CSS transform loops;
+they are paler than the diagrams and share the central reading fade. No token
+timers, scroll listeners, or per-frame JavaScript are added. The existing hidden
+page pause also pauses tokens, and reduced-motion preferences hide the stream.
+
+The local snapshot before this addition is in
+`../archives/2026-10-04-before-background/`, alongside a ZIP and SHA-256 manifest.
+It includes the current content edits and excludes Git metadata.
 
 ## Credits / Inspiration
 

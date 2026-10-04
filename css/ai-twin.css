@@ -325,6 +325,12 @@
   stroke-linejoin: round;
 }
 
+.ai-twin-send:disabled,
+.ai-twin-chip:disabled {
+  opacity: .5;
+  cursor: wait;
+}
+
 .ai-twin-send:hover {
   background: var(--accent);
 }

@@ -1,0 +1,206 @@
+/* A quiet, scroll-driven constellation of ML sketches below the content. */
+.math-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  color: #91a2b6;
+}
+
+/* Fade the drawings before they enter the main reading column. */
+.math-background::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg,
+    transparent 0%, rgba(246, 246, 248, 0.55) 22%,
+    rgba(246, 246, 248, 0.96) 37%, rgba(246, 246, 248, 0.96) 63%,
+    rgba(246, 246, 248, 0.55) 78%, transparent 100%);
+}
+
+.deck { z-index: 1; }
+.site-footer { position: relative; z-index: 1; }
+
+/* A fixed-size token layer: no layout updates or per-frame JavaScript. */
+.math-token-stream {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  contain: layout paint;
+}
+.math-token {
+  position: absolute;
+  top: var(--token-y);
+  left: 0;
+  white-space: nowrap;
+  color: #9daebf;
+  opacity: 0.40;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.025em;
+  will-change: transform;
+  animation: math-token-drift var(--token-duration, 90s) linear infinite;
+  animation-delay: var(--token-delay, 0s);
+  animation-direction: var(--token-direction, normal);
+}
+.math-token small { font-size: 9px; opacity: 0.65; }
+@keyframes math-token-drift {
+  from { transform: translate3d(-160px, 0, 0); }
+  to { transform: translate3d(calc(100vw + 160px), var(--token-drift, 18px), 0); }
+}
+
+.math-scene {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--scene-size, clamp(180px, 17vw, 250px));
+  height: auto;
+  overflow: visible;
+  opacity: var(--scene-opacity, 0.576);
+  transform: translate3d(var(--scene-x, 0px), var(--scene-y, 0px), 0)
+    rotate(var(--scene-rotation, 0deg));
+  transform-origin: center;
+}
+/* Fallback placements before JS or when it is unavailable. */
+.math-gradient { --scene-x: 3vw; --scene-y: 20vh; }
+.math-network { --scene-x: 78vw; --scene-y: 32vh; }
+.math-backprop { --scene-x: 15vw; --scene-y: 67vh; }
+.math-transformer { --scene-x: 68vw; --scene-y: 65vh; }
+.math-cnn { --scene-x: 40vw; --scene-y: 10vh; }
+
+.math-connections {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: none;
+  stroke: #aebdcc;
+  stroke-width: 0.8;
+  stroke-dasharray: 3 11;
+  opacity: 0.414;
+  animation: math-link-flow 48s linear infinite;
+}
+@keyframes math-link-flow { to { stroke-dashoffset: -140; } }
+
+.math-lines {
+  fill: none;
+  stroke: #9daebf;
+  stroke-width: 1.15;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.math-axis { stroke: #bdc4cf; }
+.math-guide { stroke: #aeb8c6; stroke-dasharray: 3 5; }
+.math-edges { stroke: #b6c0cd; stroke-width: 0.8; }
+.math-nodes { fill: #f1f3f6; }
+.math-scene text {
+  fill: #91a2b6;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+}
+.math-dot { fill: #7f95ad; opacity: 0.7; }
+
+/* Small signals travel locally while scroll moves the larger constellation. */
+.math-descent { animation: math-descent 24s linear infinite; }
+.math-forward { animation: math-forward 28s linear infinite; }
+.math-backward { animation: math-backward 30s linear infinite; }
+.math-attention { animation: math-attention 32s linear infinite; }
+.math-kernel {
+  fill: rgba(127, 149, 173, 0.1);
+  stroke: #7f95ad;
+  stroke-width: 1.1;
+  animation: math-convolution 30s linear infinite;
+}
+@keyframes math-convolution {
+  0%, 8% { transform: translate(0, 0); opacity: 0; }
+  14% { transform: translate(0, 0); opacity: 0.7; }
+  28% { transform: translate(42px, 0); }
+  34% { transform: translate(42px, 14px); }
+  48% { transform: translate(0, 14px); }
+  54% { transform: translate(0, 28px); }
+  68% { transform: translate(42px, 28px); }
+  74% { transform: translate(42px, 42px); }
+  88% { transform: translate(0, 42px); opacity: 0.7; }
+  96%, 100% { transform: translate(0, 42px); opacity: 0; }
+}
+
+@keyframes math-descent {
+  0%, 8% { transform: translate(68px, 74px); opacity: 0; }
+  14% { transform: translate(68px, 74px); opacity: 0.7; }
+  32% { transform: translate(111px, 118px); }
+  50% { transform: translate(138px, 130px); }
+  68%, 82% { transform: translate(151px, 132px); opacity: 0.7; }
+  90%, 100% { transform: translate(151px, 132px); opacity: 0; }
+}
+@keyframes math-forward {
+  0%, 10% { transform: translate(30px, 96px); opacity: 0; }
+  16% { transform: translate(30px, 96px); opacity: 0.7; }
+  42% { transform: translate(112px, 72px); }
+  66% { transform: translate(194px, 57px); }
+  82% { transform: translate(242px, 93px); opacity: 0.7; }
+  90%, 100% { transform: translate(242px, 93px); opacity: 0; }
+}
+@keyframes math-backward {
+  0%, 10% { transform: translate(222px, 96px); opacity: 0; }
+  16% { transform: translate(222px, 96px); opacity: 0.7; }
+  30% { transform: translate(222px, 114px); }
+  68% { transform: translate(51px, 114px); }
+  82% { transform: translate(51px, 96px); opacity: 0.7; }
+  90%, 100% { transform: translate(51px, 96px); opacity: 0; }
+}
+@keyframes math-attention {
+  0%, 10% { transform: translate(53px, 49px); opacity: 0; }
+  16% { transform: translate(53px, 49px); opacity: 0.7; }
+  42% { transform: translate(138px, 77px); }
+  52% { transform: translate(138px, 113px); }
+  68% { transform: translate(138px, 132px); }
+  82% { transform: translate(138px, 178px); opacity: 0.7; }
+  90%, 100% { transform: translate(138px, 178px); opacity: 0; }
+}
+
+html.math-background-paused .math-dot,
+html.math-background-paused .math-kernel,
+html.math-background-paused .math-token,
+html.math-background-paused .math-connections { animation-play-state: paused; }
+
+@media (max-width: 1023px), (hover: none) and (pointer: coarse) {
+  .math-token { top: var(--token-mobile-y, var(--token-y)); opacity: 0.28; font-size: 11px; }
+  .math-token:nth-child(1) { --token-mobile-y: 16%; }
+  .math-token:nth-child(2) { --token-mobile-y: 34%; }
+  .math-token:nth-child(3) { --token-mobile-y: 52%; }
+  .math-token:nth-child(4) { --token-mobile-y: 70%; }
+  .math-token:nth-child(5) { --token-mobile-y: 86%; }
+  .math-token:nth-child(n+6) { display: none; animation: none; will-change: auto; }
+  /* Two static sketches; tokens are the only continuously moving background. */
+  .math-scene { --scene-size: clamp(130px, 40vw, 170px); --scene-opacity: 0.396; }
+  .math-gradient { --scene-x: -12px; --scene-y: calc(var(--math-viewport-height, 100vh) * 0.22); }
+  .math-cnn {
+    --scene-x: calc(100vw - var(--scene-size) + 12px);
+    --scene-y: calc(var(--math-viewport-height, 100vh) * 0.66);
+  }
+  .math-background .math-network,
+  .math-background .math-backprop,
+  .math-background .math-transformer { display: none; }
+  .math-background .math-dot { display: none; animation: none; }
+  .math-background .math-kernel { animation: none; transform: none; opacity: 0.45; }
+  .math-connections { display: none; animation: none; }
+  .math-background::after {
+    background: linear-gradient(90deg, transparent 10%,
+      rgba(246, 246, 248, 0.93) 30%, rgba(246, 246, 248, 0.93) 70%, transparent 90%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .math-token-stream { display: none; }
+  .math-token { animation: none; will-change: auto; }
+  .math-dot { animation: none; display: none; }
+  .math-kernel, .math-connections { animation: none; }
+}
+@media print {
+  .math-background { display: none; }
+}

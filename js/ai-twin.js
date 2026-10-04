@@ -5,16 +5,14 @@
    or tap one of the quick picks to have an answer extracted for you.
 
    ---- Where the real model goes ---------------------------------------
-   There is no API call yet. askAI() below is the single seam: it takes
-   the visitor's text and resolves with { text, links }. Replace its body
-   with a fetch to your endpoint and nothing else has to change. The stub
+   The optional server endpoint is configured in ai-twin-config.js. It takes
+   the visitor's text and resolves with { text, links }. The offline mode
    answers from the table beneath, so the shell can be built, demoed and
    styled today without a key.
 
    ---- Two rules this file keeps ---------------------------------------
-   1. Honesty. Every answer comes from content that is actually on the
-      page. Where the site still holds a placeholder ("……", "Coming
-      soon"), the twin says so instead of inventing a plausible fact.
+   1. Honesty. Offline answers come from this page. The server supplies
+      confirmed personal facts and asks the model not to invent them.
    2. Safety. Visitor text and answer text are both written with
       textContent. Nothing here ever builds HTML from a string.
    ============================================================ */
@@ -32,6 +30,11 @@
   var form = document.getElementById("ai-twin-form");
   var input = document.getElementById("ai-twin-input");
   var closeBtn = document.getElementById("ai-twin-close");
+  var status = document.getElementById("ai-twin-status");
+  var endpoint = (window.AI_TWIN_CONFIG || {}).endpoint || "";
+  var history = [];
+  var busy = false;
+  if (status) status.textContent = endpoint ? "DeepSeek · ready to connect" : "Local mode · API not configured";
 
   if (!launcher || !panel || !log || !form || !input) return;
 
@@ -45,7 +48,7 @@
       keys: ["who", "about", "yourself", "xike", "yang", "introduce", "introduction", "bio",
         "你是谁", "是谁", "介绍", "本人", "关于"],
       reply: "Xike Yang is a Computer Science undergraduate.\n\n" +
-        "She's working on the fundamentals first, and the site is still being " +
+        "Her focus is ML & AI4S (Machine Learning and AI for Sustainability). The site is still being " +
         "filled in section by section, so a few panels are waiting on content.",
       links: [{ label: "About section", href: "#about" }]
     },
@@ -69,12 +72,20 @@
     },
     {
       id: "learning",
-      keys: ["learning", "learn", "studying now", "currently", "focus", "skills", "stack",
+      keys: ["learning", "learn", "studying now", "currently", "skills", "stack", "d2l",
+        "dive into deep learning", "cs336", "动手学深度学习",
         "正在学", "学什么", "学了什么", "技能"],
       reply: "What she's on right now:\n\n" +
         "· Python\n· Linux\n· Data Structures & Algorithms\n· Machine Learning\n" +
-        "· Computer Systems",
+        "· Computer Systems\n· Dive into Deep Learning (D2L)\n· CS336 (self-study)\n\n" +
+        "D2L supports her deep learning study, and CS336 is part of her self-study of language models.",
       links: [{ label: "Currently Learning", href: "#learning" }]
+    },
+    {
+      id: "focus",
+      keys: ["focus", "重点", "关注什么"],
+      reply: "Her focus is ML & AI4S (Machine Learning and AI for Sustainability).",
+      links: [{ label: "About section", href: "#about" }]
     },
     {
       id: "hobbies",
@@ -87,20 +98,25 @@
     },
     {
       id: "research",
-      keys: ["research", "paper", "papers", "publication", "publications", "学术", "研究", "论文",
+      keys: ["research", "paper", "papers", "publication", "publications", "machine learning",
+        "ml", "computer systems", "学术", "研究", "论文", "机器学习", "计算机系统",
         "科研", "研究方向"],
-      reply: "Nothing to cite yet, and the site is honest about that - the Research panel " +
-        "says these are areas she wants to grow into, and the cards are still placeholders.\n\n" +
-        "Ask her directly for specifics."
+      reply: "Her research interests are Machine Learning and Computer Systems.\n\n" +
+        "For machine learning, she's interested in how models learn from data and how " +
+        "their performance is evaluated, while building the mathematical and programming foundations.\n\n" +
+        "For computer systems, she's curious about how software interacts with operating " +
+        "systems and computer architecture, and what makes programs reliable and efficient.\n\n" +
+        "These are areas she wants to explore, not a list of publications.",
+      links: [{ label: "Research Interests", href: "#research" }]
     },
     {
       id: "projects",
       keys: ["project", "projects", "work", "portfolio", "built", "build", "code", "repo",
-        "项目", "作品", "做了什么", "做过什么"],
-      reply: "The Projects panel says \"Coming soon\", so there's nothing published to show yet.\n\n" +
-        "The one thing that is finished is this site: hand-written HTML, CSS and vanilla " +
-        "JavaScript, no framework and no build step. It's on GitHub.",
-      links: [{ label: "github.com/xkkkkkkkkkkkkkk", href: "https://github.com/xkkkkkkkkkkkkkk" }]
+        "carbonlens", "carbon lens", "sustainability", "项目", "作品", "做了什么", "做过什么",
+        "可持续", "碳"],
+      reply: "CarbonLens is an early-stage project exploring how AI can help analyze " +
+        "sustainability-related data and support a better understanding of sustainability challenges.",
+      links: [{ label: "CarbonLens project", href: "#projects" }]
     },
     {
       id: "experience",
@@ -124,7 +140,10 @@
       reply: "At a glance:\n\n" +
         "· Computer Science undergraduate\n" +
         "· TJU and POLYU\n" +
-        "· Learning Python, Linux, DSA, ML and systems\n" +
+        "· Focus: ML & AI4S\n" +
+        "· Exploring Machine Learning and Computer Systems\n" +
+        "· Learning Python, Linux, DSA, ML and systems; self-study with D2L and CS336\n" +
+        "· CarbonLens: AI for Sustainability\n" +
         "· Into photography, the outdoors, food, cats and musicals\n" +
         "· xk_yyy@outlook.com"
     }
@@ -150,7 +169,8 @@
 
   var GREETING = {
     reply: "Hi - I'm Xike's AI twin.\n\n" +
-      "Ask me about her, or tap a suggestion below.",
+      (endpoint ? "Ask about Xike, programming, ML, or other topics. Messages are sent to DeepSeek to generate replies. AI can make mistakes." :
+        "Ask me about her, or tap a suggestion below. General questions will be available after the API is configured."),
     links: null
   };
 
@@ -194,17 +214,40 @@
   }
 
   /* ---------------------------------------------------------------
-     TODO: the live model.
-
-     Replace this body with a real request and keep the contract:
+     Live server proxy, with a local mode when no endpoint is configured.
 
          askAI(text) -> Promise<{ text: string, links?: [{label, href}] }>
 
      Resolve with plain text only - the caller renders it with
-     textContent, so returning HTML would just show up as tags. Reject
-     to have the caller show its "can't reach the twin" line.
+     textContent, so returning HTML would just show up as tags.
      --------------------------------------------------------------- */
   function askAI(text) {
+    if (endpoint) {
+      var messages = history.concat([{ role: "user", content: text }]);
+      while (messages.length > 11 || messages.reduce(function (sum, m) { return sum + m.content.length; }, 0) > 12000) {
+        messages.splice(0, 2);
+      }
+      var controller = new AbortController();
+      var timer = window.setTimeout(function () { controller.abort(); }, 35000);
+      return fetch(endpoint, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: messages }), signal: controller.signal,
+        credentials: "omit", cache: "no-store"
+      }).then(function (response) {
+        if (!response.ok) {
+          var error = new Error("AI request failed");
+          error.status = response.status;
+          throw error;
+        }
+        return response.json();
+      }).then(function (answer) {
+        if (typeof answer.text !== "string" || !answer.text.trim() || answer.text.length > 20000) throw new Error("Invalid AI reply");
+        // Only successful turns enter context; errors and offline answers never do.
+        history = messages.concat([{ role: "assistant", content: answer.text.slice(0, 2000) }]);
+        if (status) status.textContent = "DeepSeek · connected";
+        return { text: answer.text };
+      }).finally(function () { window.clearTimeout(timer); });
+    }
     return new Promise(function (resolve) {
       window.setTimeout(function () {
         var entry = localAnswer(text);
@@ -261,7 +304,15 @@
 
   function send(text) {
     var trimmed = String(text || "").trim();
-    if (!trimmed) return;
+    if (!trimmed || busy) return;
+    if (trimmed.length > 2000) {
+      pushMessage("Please keep your question within 2,000 characters.", "bot");
+      return;
+    }
+    busy = true;
+    form.setAttribute("aria-busy", "true");
+    form.querySelector("button[type='submit']").disabled = true;
+    if (quick) Array.prototype.forEach.call(quick.querySelectorAll("button"), function (button) { button.disabled = true; });
 
     pushMessage(trimmed, "me");
     input.value = "";
@@ -275,9 +326,15 @@
       })
       .catch(function (err) {
         typing.remove();
-        pushMessage("I can't reach my brain right now. The feedback form in Contact " +
-          "still works, though.", "bot", [{ label: "Contact", href: "#contact" }]);
-        if (window.console && console.warn) console.warn("[ai-twin]", err);
+        if (status) status.textContent = "DeepSeek · temporarily unavailable";
+        pushMessage(err.status === 429 ? "The request limit has been reached. Please try again later." :
+          "I couldn't get an AI reply. Please try again shortly. Your question is restored below.", "bot");
+        if (!input.value) input.value = trimmed;
+      }).finally(function () {
+        busy = false;
+        form.setAttribute("aria-busy", "false");
+        form.querySelector("button[type='submit']").disabled = false;
+        if (quick) Array.prototype.forEach.call(quick.querySelectorAll("button"), function (button) { button.disabled = false; });
       });
   }
 

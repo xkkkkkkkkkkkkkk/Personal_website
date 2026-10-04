@@ -1,0 +1,3 @@
+[functions.ai-twin]
+# Public portfolio visitors have no login. The handler enforces request quotas.
+verify_jwt = false
